@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feat/**]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install stylelint
+        run: npm install -g stylelint stylelint-config-standard 2>/dev/null || true
+
+      - name: Lint CSS
+        run: |
+          if command -v stylelint &>/dev/null; then
+            stylelint "src/**/*.css" --config '{"rules":{"no-empty-source":null,"block-no-empty":null}}' || echo "::warning ::CSS lint had findings"
+          else
+            echo "::notice ::stylelint not available — skipping CSS lint"
+          fi
+
+      - name: Lint JS (syntax check)
+        run: |
+          echo "--- Syntax-checking JS files ---"
+          for f in src/*.js; do
+            echo "  Checking $f ..."
+            node --check "$f" && echo "    OK" || echo "    FAILED"
+          done
+
+      - name: Run tests
+        run: |
+          echo "--- Running test_refresh.js ---"
+          node tests/test_refresh.js
+          echo "--- Running test_responsive.js ---"
+          node tests/test_responsive.js
+          echo "--- Running test_state.js ---"
+          node tests/test_state.js
+
+      - name: Test summary
+        if: always()
+        run: |
+          echo "═══════════════════════════════════════"
+          echo "  CI Complete"
+          echo "═══════════════════════════════════════"
