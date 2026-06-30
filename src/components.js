@@ -223,3 +223,21 @@ function DonutChart(props) {
   }
   return '<div style="width:130px;height:130px;border-radius:50%;background:conic-gradient(' + gradient.join(",") + ');display:flex;align-items:center;justify-content:center;"><span style="color:var(--text-primary);font:700 var(--font-size-lg) var(--font-display);">' + total + '</span></div>';
 }
+
+// ── DataPath — annotate an element with a data-path for diff-patch targeting ──
+// Wraps content in a <span> or <div> with data-path="..." attribute.
+// Used by refresh.js diff-patch engine for surgical DOM updates.
+// Props: { path: "gateway.pid", tag: "span" (default), content: "12345", attrs: {} }
+function DataPath(props) {
+  var path = props.path || "";
+  var tag = props.tag || "span";
+  var content = props.content !== undefined ? props.content : "";
+  var attrs = props.attrs || {};
+  var attrStr = ' data-path="' + path + '"';
+  for (var k in attrs) {
+    if (attrs.hasOwnProperty(k)) {
+      attrStr += ' ' + k + '="' + attrs[k] + '"';
+    }
+  }
+  return '<' + tag + attrStr + '>' + content + '</' + tag + '>';
+}
