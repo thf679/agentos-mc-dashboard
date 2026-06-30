@@ -945,7 +945,7 @@ setInterval(updateClock, 1000);
       DataTable({
         headers: ["Time", "Agent", "Task", "Model", "Status"],
         rows: rows,
-        opts: { compact: true, monospace: false, maxHeight: "" }
+        opts: { compact: true, monospace: false, maxHeight: "", scrollable: true }
       }) +
       '</div>'
     });
@@ -1663,7 +1663,7 @@ setInterval(updateClock, 1000);
       return '<div class="card"><div class="card-bd placeholder">No SDLC activity recorded yet.</div></div>';
     }
     var h = '<div class="card"><div class="card-hd">Activity Feed <span class="mono" style="color:var(--text-muted)">(' + data.total + ' entries)</span></div>';
-    h += '<div class="card-bd nopad"><table class="kv-table"><thead><tr>';
+    h += '<div class="card-bd nopad"><div class="table-scroll table-scroll-ios"><table class="kv-table"><thead><tr>';
     h += '<th>Agent</th><th>Task</th><th>Repo</th><th>PR</th><th>Status</th><th>When</th>';
     h += '</tr></thead><tbody>';
 
@@ -1681,7 +1681,7 @@ setInterval(updateClock, 1000);
       h += '<td class="num nowrap">' + ts(e.created_at) + '</td>';
       h += '</tr>';
     }
-    h += '</tbody></table></div></div>';
+    h += '</tbody></table></div></div></div>';
 
     // Agent stats
     var agents = data.agents || {};
