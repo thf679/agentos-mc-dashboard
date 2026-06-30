@@ -140,6 +140,151 @@ body::after {
   color: var(--text-muted);
   font: 400 var(--font-size-base) var(--font-display);
 }
+
+/* ── Hamburger Menu (mobile) ── */
+.nav-hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 24px;
+  cursor: pointer;
+  padding: var(--space-2);
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  line-height: 1;
+}
+.nav-menu {
+  display: none;
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  background: var(--bg-glass);
+  backdrop-filter: blur(var(--blur-heavy));
+  -webkit-backdrop-filter: blur(var(--blur-heavy));
+  border-bottom: 1px solid var(--border-glass);
+  padding: var(--space-2);
+  z-index: var(--z-dropdown);
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.nav-menu.open { display: flex; }
+.nav-menu .nav-tab {
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  min-height: var(--touch-target-min);
+}
+
+/* ── Responsive: Mobile <600px ── */
+@media (max-width: 599px) {
+  .nav { height: var(--nav-height-mobile); padding: 0 var(--space-3); }
+  .nav-tabs { display: none; }
+  .nav-hamburger { display: flex; align-items: center; justify-content: center; }
+  .nav-status { gap: var(--space-1); }
+  .nav-title { font-size: var(--font-size-base); }
+  .content { padding-top: 64px; }
+}
+
+/* ── Responsive: Tablet 600-767px (hamburger still) ── */
+@media (min-width: 600px) and (max-width: 767px) {
+  .nav { height: var(--nav-height-mobile); padding: 0 var(--space-4); }
+  .nav-tabs { display: none; }
+  .nav-hamburger { display: flex; align-items: center; justify-content: center; }
+  .content { padding-top: 64px; }
+}
+
+/* ── Responsive: Tablet/Desktop >=768px — show tabs ── */
+@media (min-width: 768px) {
+  .nav-hamburger { display: none; }
+  .nav-menu { display: none !important; }
+  .nav-tabs { display: flex; }
+}
+
+/* ── Overview stat strip responsive ── */
+@media (max-width: 599px) {
+  /* 5-column → single column on mobile */
+  .stat-strip-mobile { grid-template-columns: 1fr !important; }
+}
+@media (min-width: 600px) and (max-width: 1024px) {
+  /* 5-column → 2 columns on tablet */
+  .stat-strip-tablet { grid-template-columns: 1fr 1fr !important; }
+}
+
+/* ── Footer stats responsive ── */
+@media (max-width: 599px) {
+  .footer-stats-5col { grid-template-columns: 1fr 1fr !important; }
+}
+@media (min-width: 600px) and (max-width: 1024px) {
+  .footer-stats-5col { grid-template-columns: 1fr 1fr 1fr !important; }
+}
+
+/* ── Agent cards responsive ── */
+@media (max-width: 599px) {
+  .agent-grid-resp { grid-template-columns: 1fr !important; }
+}
+
+/* ── System health card responsive ── */
+@media (max-width: 599px) {
+  .health-bars-mobile {
+    flex-direction: column !important;
+    gap: var(--space-3) !important;
+  }
+  .health-bar-item {
+    min-width: 120px;
+  }
+  .overview-top-grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-3) !important;
+  }
+  .overview-radar-col { display: none; }
+}
+
+/* ── Agents tab stats responsive ── */
+@media (max-width: 599px) {
+  .agents-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .agents-stats-2x2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Throughput + Activity responsive ── */
+@media (max-width: 599px) {
+  .overview-bottom-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Sparkline canvas responsive ── */
+#sparkline {
+  max-width: 100%;
+}
+
+@media (max-width: 599px) {
+  #sparkline { height: 40px !important; }
+}
+
+/* ── Schedule tab responsive ── */
+@media (max-width: 599px) {
+  .schedule-2col { grid-template-columns: 1fr !important; }
+}
+
+/* ── Kanban responsive ── */
+@media (max-width: 599px) {
+  .kanban-3col { grid-template-columns: 1fr !important; }
+}
+
+/* ── Touch-friendly tab buttons ── */
+.nav-tab {
+  min-height: var(--touch-target-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 </style>
 </head>
 <body>
@@ -151,7 +296,16 @@ body::after {
     <span class="nav-title">Hermes</span>
     <span id="badge-version"></span>
   </div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">☰</button>
   <div class="nav-tabs" id="nav-tabs">
+    <button class="nav-tab active" data-tab="overview">Overview</button>
+    <button class="nav-tab" data-tab="agents">Agents</button>
+    <button class="nav-tab" data-tab="tasks">Tasks</button>
+    <button class="nav-tab" data-tab="schedule">Schedule</button>
+    <button class="nav-tab" data-tab="content">Library</button>
+    <button class="nav-tab" data-tab="sdlc">SDLC</button>
+  </div>
+  <div class="nav-menu" id="nav-menu">
     <button class="nav-tab active" data-tab="overview">Overview</button>
     <button class="nav-tab" data-tab="agents">Agents</button>
     <button class="nav-tab" data-tab="tasks">Tasks</button>
@@ -194,7 +348,32 @@ body::after {
 // ── Render Badge ──
 document.getElementById("badge-version").innerHTML = Badge({ text: "v1.0", color: "var(--text-muted)", variant: "subtle" });
 
-// ── Tab switching ──
+// ── Hamburger menu ──
+(function() {
+  var hamburger = document.getElementById("nav-hamburger");
+  var menu = document.getElementById("nav-menu");
+  if (hamburger && menu) {
+    hamburger.addEventListener("click", function(e) {
+      e.stopPropagation();
+      menu.classList.toggle("open");
+      hamburger.textContent = menu.classList.contains("open") ? "✕" : "☰";
+    });
+    // Close menu on outside click
+    document.addEventListener("click", function(e) {
+      if (!menu.contains(e.target) && e.target !== hamburger) {
+        menu.classList.remove("open");
+        hamburger.textContent = "☰";
+      }
+    });
+    // Close menu on ESC
+    document.addEventListener("keydown", function(e) {
+      if (e.key === "Escape" && menu.classList.contains("open")) {
+        menu.classList.remove("open");
+        hamburger.textContent = "☰";
+      }
+    });
+  }
+})();
 var tabs = document.querySelectorAll(".nav-tab");
 var panels = document.querySelectorAll(".tab-panel");
 tabs.forEach(function(tab) {
@@ -204,6 +383,13 @@ tabs.forEach(function(tab) {
     tab.classList.add("active");
     var panel = document.getElementById("panel-" + tab.dataset.tab);
     if (panel) panel.classList.add("active");
+    // Close mobile menu if open
+    var menu = document.getElementById("nav-menu");
+    var hamburger = document.getElementById("nav-hamburger");
+    if (menu && menu.classList.contains("open")) {
+      menu.classList.remove("open");
+      if (hamburger) hamburger.textContent = "☰";
+    }
   });
 });
 
@@ -270,10 +456,10 @@ setInterval(updateClock, 1000);
 
     // TOP: Live Ops Console
     html += GlassCard({ children:
-      '<div style="display:grid;grid-template-columns:180px 1fr 1fr;gap:var(--space-5);">' +
+      '<div class="overview-top-grid" style="display:grid;grid-template-columns:180px 1fr 1fr;gap:var(--space-5);">' +
 
       // Left: Radar
-      '<div style="text-align:center;">' +
+      '<div class="overview-radar-col" style="text-align:center;">' +
       '<svg viewBox="0 0 140 140" style="width:180px;height:180px;">' +
       '<circle cx="70" cy="70" r="55" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>' +
       '<circle cx="70" cy="70" r="40" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>' +
@@ -338,7 +524,7 @@ setInterval(updateClock, 1000);
     var responsive = agentKeys.filter(function(n) { return (perAgent[n] && perAgent[n].total > 0); }).length;
     var tt = ses.token_totals || {};
 
-    html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-4);margin-top:var(--space-4);">' +
+    html += '<div class="stat-strip-mobile stat-strip-tablet" style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-4);margin-top:var(--space-4);">' +
       '<div style="border-top:2px solid var(--status-active);padding-top:var(--space-2);">' +
       StatCard({ label: "Integrity", value: integrityPct + "%", accent: "var(--status-active)", subtext: responsive + " of 5 responsive", barWidth: integrityPct + "%" }) +
       '</div>' +
@@ -359,7 +545,7 @@ setInterval(updateClock, 1000);
     // Footer: 5-cell grid
     var errors = 0;
     for (var k in perAgent) { errors += perAgent[k].failed || 0; if (perAgent.hasOwnProperty(k)) {} }
-    html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-2);margin-top:var(--space-4);padding:var(--space-3) var(--space-4);background:var(--bg-glass);border:1px solid var(--border-glass);border-radius:var(--radius-lg);">' +
+    html += '<div class="footer-stats-5col" style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-2);margin-top:var(--space-4);padding:var(--space-3) var(--space-4);background:var(--bg-glass);border:1px solid var(--border-glass);border-radius:var(--radius-lg);">' +
       '<div style="text-align:center;"><div style="font:400 var(--font-size-xs) var(--font-mono);color:var(--text-muted);letter-spacing:var(--letter-spacing-wide);">QUEUE</div><div style="font:700 var(--font-size-lg) var(--font-display);color:var(--text-primary);">' + (kan.total || 0) + '</div></div>' +
       '<div style="text-align:center;"><div style="font:400 var(--font-size-xs) var(--font-mono);color:var(--text-muted);letter-spacing:var(--letter-spacing-wide);">SESSIONS</div><div style="font:700 var(--font-size-lg) var(--font-display);color:var(--text-primary);">' + (ses.session_count || 0) + '</div></div>' +
       '<div style="text-align:center;"><div style="font:400 var(--font-size-xs) var(--font-mono);color:var(--text-muted);letter-spacing:var(--letter-spacing-wide);">ERRORS</div><div style="font:700 var(--font-size-lg) var(--font-display);color:' + (errors === 0 ? 'var(--brand-mint)' : 'var(--brand-red)') + ';">' + errors + '</div></div>' +
@@ -368,7 +554,7 @@ setInterval(updateClock, 1000);
       '</div>';
 
     // Bottom: Throughput + Activity
-    html += '<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:var(--space-4);margin-top:var(--space-4);">';
+    html += '<div class="overview-bottom-grid" style="display:grid;grid-template-columns:1.2fr 1fr;gap:var(--space-4);margin-top:var(--space-4);">';
 
     // Throughput (sparkline)
     html += GlassCard({ children:
@@ -460,6 +646,10 @@ setInterval(updateClock, 1000);
 
     // Draw sparkline after DOM update
     setTimeout(drawSparkline, 50);
+
+    // Resize sparkline on window resize + orientation change
+    window.addEventListener("resize", function() { setTimeout(drawSparkline, 50); });
+    window.addEventListener("orientationchange", function() { setTimeout(drawSparkline, 150); });
   }
 
   function drawSparkline() {
@@ -585,7 +775,7 @@ setInterval(updateClock, 1000);
     html += '</div>';
 
     // ── AGENT CARDS ──
-    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4);margin-bottom:var(--space-6);">';
+    html += '<div class="agent-grid-resp" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:var(--space-4);margin-bottom:var(--space-6);">';
 
     agentKeys.forEach(function(key) {
       var a = agents[key] || {};
@@ -680,10 +870,10 @@ setInterval(updateClock, 1000);
 
     html += '<div style="margin-top:var(--space-6);margin-bottom:var(--space-6);">';
     html += '<div style="font:400 var(--font-size-xs) var(--font-mono);color:var(--text-muted);letter-spacing:var(--letter-spacing-wide);text-transform:uppercase;margin-bottom:var(--space-4);">Agent Statistics</div>';
-    html += '<div style="display:grid;grid-template-columns:1fr 300px;gap:var(--space-4);align-items:start;">';
+    html += '<div class="agents-stats-grid" style="display:grid;grid-template-columns:1fr 300px;gap:var(--space-4);align-items:start;">';
 
     // LEFT: 2×2 StatCards
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);">';
+    html += '<div class="agents-stats-2x2" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);">';
     html += GlassCard({ children: StatCard({ label: "Tasks Today", value: todayCount, accent: "var(--status-warning)", barWidth: "100%" }) });
     html += GlassCard({ children: StatCard({ label: "Tasks This Week", value: weekCount, accent: "var(--brand-cyan)", barWidth: "100%" }) });
 
@@ -916,7 +1106,7 @@ setInterval(updateClock, 1000);
     var html = '';
     var allEmpty = tasks.length === 0;
 
-    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);align-items:start;">';
+    html += '<div class="kanban-3col" style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);align-items:start;">';
 
     STATUS_ORDER.forEach(function(status) {
       var cols = tasks.filter(function(t) { return t.status === status || (status === "done" && t.status === "completed"); });
@@ -1055,7 +1245,7 @@ setInterval(updateClock, 1000);
     }
 
     var html = '';
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start;">';
+    html += '<div class="schedule-2col" style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start;">';
     html += '<div>' + renderSection("HERMES JOBS", hermesJobs) + '</div>';
     html += '<div>' + renderSection("SYSTEM JOBS", systemJobs) + '</div>';
     html += '</div>';
