@@ -141,6 +141,68 @@
   --z-overlay:    300;
   --z-modal:      400;
   --z-toast:      500;
+
+  /* ── Responsive Breakpoints (read-only design tokens) ── */
+  --bp-mobile:  600px;
+  --bp-tablet:  1024px;
+
+  /* ── Responsive Spacing ── */
+  --content-padding-mobile: var(--space-3);
+  --content-padding-tablet: var(--space-4);
+  --content-padding-desktop: var(--space-6);
+  --nav-height-mobile: 48px;
+  --nav-height-tablet: 56px;
+  --nav-height-desktop: 56px;
+
+  /* ── Touch Targets (WCAG 2.1 AA) ── */
+  --touch-target-min: 44px;
+
+  /* ── Fluid Typography ── */
+  --font-size-fluid-body:    clamp(0.8125rem, 0.85rem + 0.1vw, 0.9375rem);
+  --font-size-fluid-heading: clamp(1.25rem, 1rem + 2vw, 2rem);
+  --font-size-fluid-mono:    clamp(0.6875rem, 0.7rem + 0.05vw, 0.8125rem);
+  --font-size-fluid-stat:    clamp(1rem, 0.9rem + 1vw, 1.5rem);
+}
+
+/* ── prefers-reduced-motion ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Mobile-first Responsive Breakpoints ────────────── */
+/* Base styles = mobile (<600px) */
+/* Tablet: 600px – 1024px */
+@media (min-width: 600px) and (max-width: 1024px) {
+  :root {
+    --content-padding: var(--content-padding-tablet);
+    --nav-height: var(--nav-height-tablet);
+  }
+}
+
+/* Desktop: >1024px */
+@media (min-width: 1025px) {
+  :root {
+    --content-padding: var(--content-padding-desktop);
+    --nav-height: var(--nav-height-desktop);
+  }
+}
+
+/* ── Touch-friendly interactive elements ───────────── */
+.nav-tab,
+button,
+.kv-badge,
+.log-pill,
+.lib-file-item,
+select,
+input[type="text"],
+input[type="search"],
+textarea {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
 }
 
 /* ── Keyframe Animations ──────────────────────────────── */
@@ -185,3 +247,44 @@
 /* Grid helpers for SDLC layout */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+/* SDLC 600px breakpoint for single column */
+@media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* ── Table Scroll Container ── */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+.table-scroll table {
+  min-width: 600px;
+  white-space: nowrap;
+}
+
+/* ── Sticky First Column (mobile) ── */
+.table-sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--bg-base) !important;
+}
+.table-scroll thead th.table-sticky-col {
+  z-index: 2;
+  background: var(--bg-base) !important;
+}
+
+/* ── iOS smooth scrolling ── */
+.table-scroll-ios {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── SDLC responsive: single column at 600px ── */
+@media (max-width: 600px) {
+  .sdlc-grid { gap: var(--space-4); }
+}
+@media (min-width: 600px) {
+  .sdlc-responsive-stack { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 599px) {
+  .sdlc-responsive-stack { grid-template-columns: 1fr !important; }
+}

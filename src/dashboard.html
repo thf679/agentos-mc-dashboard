@@ -34,7 +34,13 @@ td{padding:.35rem .6rem;border-bottom:1px solid #21262d30}tr:hover td{background
 .empty{color:#8b949e;font-style:italic;padding:1rem;text-align:center}
 .err-state{color:#f85149;padding:1rem;text-align:center}
 footer{text-align:center;padding:.8rem;color:#484f58;font-size:.72rem;border-top:1px solid #21262d;margin-top:1rem}
-@media(max-width:800px){.grid{grid-template-columns:1fr}.full{grid-column:1}}
+/* ── Mobile responsive ── */
+@media(max-width:599px){header{flex-direction:column;align-items:flex-start;padding:.75rem 1rem}.meta{gap:.5rem}#ref{height:44px;font-size:.82rem}.grid{grid-template-columns:1fr;padding:.75rem}.full{grid-column:1}.card{min-width:0}.trunc{max-width:160px}#msg{max-height:200px!important}.msg-line{font-size:.72rem}.msg-role{min-width:40px;font-size:.65rem}.table-scroll{width:100%}h1{font-size:1rem}}
+@media(min-width:600px) and (max-width:1024px){.grid{grid-template-columns:1fr 1fr;padding:1rem}.full{grid-column:1/-1}}
+@media(min-width:1025px){.grid{grid-template-columns:1fr 1fr}}
+/* ── Table scroll containers ── */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%}
+.table-wrap table{min-width:600px}
 </style></head><body>
 <header><h1><span id="dot" class="dot dot-ok"></span> AgentOS Mission Control v2</h1>
 <div class="meta"><span id="ts">—</span>
