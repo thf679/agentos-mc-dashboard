@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+# pre-commit — Lint CSS and JS files staged for commit in agentos-mc-dashboard
+# Install: ln -sf ../../.githooks/pre-commit .git/hooks/pre-commit
+
+set -euo pipefail
+
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.js$' || true)
+STAGED_CSS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.css$' || true)
+
+HAS_ISSUES=0
+
+if [ -n "$STAGED_CSS" ]; then
+    echo "🔍 Linting staged CSS..."
+    for f in $STAGED_CSS; do
+        if [ ! -f "$f" ]; then continue; fi
+        OPEN=$(grep -o '{' "$f" | wc -l)
+        CLOSE=$(grep -o '}' "$f" | wc -l)
+        if [ "$OPEN" != "$CLOSE" ]; then
+            echo "  ❌ $f — unbalanced braces ($OPEN open, $CLOSE close)"
+            HAS_ISSUES=1
+        else
+            echo "  ✅ $f ($OPEN braces)"
+        fi
+    done
+fi
+
+if [ -n "$STAGED_JS" ]; then
+    echo "🔍 Syntax-checking staged JS..."
+    for f in $STAGED_JS; do
+        if [ ! -f "$f" ]; then continue; fi
+        echo "  Checking $f ..."
+        if node --check "$f" 2>&1; then
+            echo "    ✅ OK"
+        else
+            echo "    ❌ FAILED — aborting commit"
+            exit 1
+        fi
+    done
+fi
+
+if [ $HAS_ISSUES -eq 1 ]; then
+    echo "❌ Lint issues found. Fix them before committing."
+    exit 1
+fi
+
+echo "✅ Pre-commit checks passed."
