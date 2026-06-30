@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AgentOS MC v2</title><style>
+*{box-sizing:border-box;margin:0;padding:0}html{font-size:14px}
+body{background:#0d1117;color:#c9d1d9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5}
+header{background:#161b22;border-bottom:1px solid #21262d;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+h1{font-size:1.2rem;color:#58a6ff;display:flex;align-items:center;gap:.5rem}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.dot-ok{background:#3fb950}.dot-err{background:#f85149}
+.meta{font-size:.78rem;color:#8b949e;display:flex;gap:1rem;align-items:center}
+.grid{padding:1.25rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:1400px;margin:0 auto}
+.full{grid-column:1/-1}
+.card{background:#161b22;border:1px solid #21262d;border-radius:8px;overflow:hidden}
+.hd{padding:.6rem 1rem;border-bottom:1px solid #21262d;font-size:.8rem;font-weight:600;color:#8b949e;text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
+.bd{padding:.6rem 1rem}.nopad{padding:0}
+.badge{display:inline-block;padding:.12em .55em;border-radius:10px;font-size:.72rem;font-weight:600}
+.bg-ok{background:#122d1e;color:#3fb950}.bg-warn{background:#2e240f;color:#d29922}
+.bg-err{background:#2d141b;color:#f85149}.bg-info{background:#162838;color:#58a6ff}
+.bg-muted{background:#1c2128;color:#8b949e}
+table{width:100%;border-collapse:collapse;font-size:.78rem}
+th{text-align:left;padding:.4rem .6rem;color:#8b949e;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #21262d;background:#0d1117}
+td{padding:.35rem .6rem;border-bottom:1px solid #21262d30}tr:hover td{background:#1c212840}
+.mono{font-family:'SF Mono','Fira Code',monospace;font-size:.75rem}
+.trunc{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.plt-row{display:flex;align-items:center;gap:.5rem;padding:.3rem 0;border-bottom:1px solid #21262d30}
+.plt-row:last-child{border-bottom:none}.plat-name{font-weight:600;min-width:65px}
+.c-ok{color:#3fb950}.c-err{color:#f85149}
+.msg-line{padding:.3rem .6rem;border-bottom:1px solid #21262d30;font-size:.78rem}
+.msg-line:hover{background:#1c212840}
+.r-user{color:#3fb950}.r-assistant{color:#58a6ff}.r-tool{color:#d29922}
+.msg-role{display:inline-block;min-width:50px;font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+.msg-meta{color:#8b949e;font-size:.68rem;margin-left:.4rem}
+.empty{color:#8b949e;font-style:italic;padding:1rem;text-align:center}
+.err-state{color:#f85149;padding:1rem;text-align:center}
+footer{text-align:center;padding:.8rem;color:#484f58;font-size:.72rem;border-top:1px solid #21262d;margin-top:1rem}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.full{grid-column:1}}
+</style></head><body>
+<header><h1><span id="dot" class="dot dot-ok"></span> AgentOS Mission Control v2</h1>
+<div class="meta"><span id="ts">—</span>
+<select id="ref" onchange="setRefresh()" style="background:#21262d;color:#c9d1d9;border:1px solid #30363d;padding:2px 6px;border-radius:4px;font-size:.78rem">
+<option value="5">5s</option><option value="10" selected>10s</option><option value="30">30s</option><option value="60">60s</option><option value="0">off</option></select></div></header>
+<div class="grid">
+<div class="card"><div class="hd">Gateway <span id="gw-badge" class="badge bg-muted">—</span></div><div class="bd" id="gw"></div></div>
+<div class="card"><div class="hd">Agent Logs</div><div class="bd" id="ls"></div></div>
+<div class="card full"><div class="hd">Sessions <span id="se-cnt" class="badge bg-muted">—</span></div><div class="nopad" id="se"></div></div>
+<div class="card full"><div class="hd">Kanban <span id="kb-cnt" class="badge bg-muted">—</span></div><div class="nopad" id="kb"></div></div>
+<div class="card full"><div class="hd">Recent Messages</div><div class="nopad" id="msg" style="max-height:380px;overflow-y:auto"></div></div>
+</div><footer>AgentOS Mission Control v2 · Read-only</footer>
+<script>
+let timer=null,secs=10;
+function bad(c,t){return '<span class="badge bg-'+c+'">'+esc(t)+'</span>'}
+function esc(s){return s==null?'\u2014':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function ts(v){if(!v||v==='None')return'\u2014';if(v.startsWith('t+'))return v;try{return new Date(v).toLocaleString(void 0,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch(e){return v}}
+async function load(){try{const r=await fetch('/api/summary');const d=await r.json();document.getElementById('dot').className='dot '+(d.health?.status==='healthy'?'dot-ok':'dot-err');document.getElementById('ts').textContent=new Date().toLocaleTimeString();gw(d.gateway);se(d.sessions);msg(d.messages);kb(d.kanban);lg(d.logs)}catch(e){document.getElementById('dot').className='dot dot-err';document.getElementById('ts').textContent='error: '+e.message}}
+function gw(d){if(!d||d.error){document.getElementById('gw').innerHTML='<div class="err-state">'+esc(d?.error)+'</div>';return}const gb=document.getElementById('gw-badge');gb.className='badge '+(d.gateway_state==='running'?'bg-ok':'bg-err');gb.textContent=d.gateway_state||'unknown';let h='<div style="display:flex;gap:1.2rem;flex-wrap:wrap;margin-bottom:.4rem">';h+='<div><span style="color:#8b949e">PID</span> '+esc(d.pid)+'</div>';h+='<div><span style="color:#8b949e">Agents</span> '+esc(d.active_agents)+'</div>';h+='<div><span style="color:#8b949e">Updated</span> '+ts(d.updated_at)+'</div></div>';if(d.platforms)for(const[n,i]of Object.entries(d.platforms)){const ok=i.state==='connected';h+='<div class="plt-row"><span class="plat-name">'+esc(n)+'</span>';h+='<span class="'+(ok?'c-ok':'c-err')+'">'+esc(i.state)+'</span>';h+='<span style="color:#8b949e;font-size:.72rem">'+ts(i.updated_at)+'</span></div>'}document.getElementById('gw').innerHTML=h}
+function se(d){document.getElementById('se-cnt').textContent=(d||[]).length;if(!d||d.length===0){document.getElementById('se').innerHTML='<div class="empty">No sessions</div>';return}let h='<table><thead><tr><th>Title</th><th>Model</th><th>Started</th><th>Msgs</th><th>Tools</th><th>Tokens in</th><th>Cost</th></tr></thead><tbody>';for(const s of d)h+='<tr><td class="trunc" title="'+esc(s.title)+'">'+esc(s.title)+'</td><td class="mono">'+esc(s.model)+'</td><td>'+ts(s.started_at)+'</td><td class="num">'+esc(s.message_count)+'</td><td class="num">'+esc(s.tool_call_count)+'</td><td class="num">'+Number(s.input_tokens||0).toLocaleString()+'</td><td class="num mono">'+(s.estimated_cost_usd?'$'+Number(s.estimated_cost_usd).toFixed(4):'\u2014')+'</td></tr>';h+='</tbody></table>';document.getElementById('se').innerHTML=h}
+function msg(d){if(!d||d.length===0){document.getElementById('msg').innerHTML='<div class="empty">No messages</div>';return}let h='';for(const m of d)h+='<div class="msg-line"><span class="msg-role r-'+m.role+'">'+esc(m.role)+'</span> '+esc(m.preview||'')+'<span class="msg-meta">'+ts(m.timestamp)+'</span></div>';document.getElementById('msg').innerHTML=h}
+function kb(d){if(!d||d.error){document.getElementById('kb').innerHTML='<div class="empty">'+esc(d?.error||'No kanban data')+'</div>';return}document.getElementById('kb-cnt').textContent=d.total||0;if(!d.tasks||d.tasks.length===0){document.getElementById('kb').innerHTML='<div class="empty">Board is empty</div>';return}let h='<table style="margin:.6rem 1rem;width:calc(100% - 2rem)"><thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Priority</th><th>Assignee</th><th>Created</th></tr></thead><tbody>';for(const t of d.tasks)h+='<tr><td class="mono trunc" style="max-width:160px" title="'+esc(t.id)+'">'+esc(t.id)+'</td><td class="trunc">'+esc(t.title)+'</td><td>'+bad(t.status==='done'?'ok':'warn',t.status)+'</td><td class="num">'+esc(t.priority)+'</td><td>'+esc(t.assignee)+'</td><td>'+ts(t.created_at)+'</td></tr>';h+='</tbody></table>';document.getElementById('kb').innerHTML=h}
+function lg(d){if(!d||d.length===0){document.getElementById('ls').innerHTML='<div class="empty">No logs</div>';return}const by={};for(const e of d)by[e.agent_name]=(by[e.agent_name]||0)+1;let h='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:.6rem">';h+='<div><div style="font-size:1.4rem;font-weight:700;color:#58a6ff;text-align:center">'+d.length+'</div><div style="font-size:.68rem;color:#8b949e;text-transform:uppercase;letter-spacing:.04em;text-align:center">Total</div></div>';for(const[a,n]of Object.entries(by))h+='<div><div style="font-size:1.4rem;font-weight:700;color:#58a6ff;text-align:center">'+n+'</div><div style="font-size:.68rem;color:#8b949e;text-transform:uppercase;letter-spacing:.04em;text-align:center">'+esc(a)+'</div></div>';h+='</div>';if(d[0])h+='<div style="margin-top:.4rem;font-size:.72rem;color:#8b949e">Latest: <strong style="color:#c9d1d9">'+esc(d[0].agent_name)+'</strong> \u2014 '+esc(d[0].task_description)+'</div>';document.getElementById('ls').innerHTML=h}
+function setRefresh(){secs=parseInt(document.getElementById('ref').value)||0;if(timer)clearInterval(timer);if(secs>0)timer=setInterval(load,secs*1000)}
+load().then(setRefresh);
+</script></body></html>

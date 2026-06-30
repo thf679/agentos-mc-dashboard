@@ -1,0 +1,6 @@
+screenshots/before/*.png
+screenshots/after/*.png
+*.db
+*.db-journal
+__pycache__/
+.DS_Store
