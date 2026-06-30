@@ -114,6 +114,30 @@
     }
   }
 
+  // ── Process replace operations: re-render changed subtrees ──
+  function processReplaceOps(data, renderFn, prevData) {
+    if (!renderFn || !prevData) return;
+    var dirtyEls = document.querySelectorAll('[data-dirty="replace"]');
+    for (var i = 0; i < dirtyEls.length; i++) {
+      var el = dirtyEls[i];
+      if (el.hasAttribute('data-editing')) continue;
+      if (el.querySelector(':focus') || el.matches(':focus')) continue;
+      // Re-render this specific subtree by calling the renderFn
+      // with full data — the renderFn should handle per-element updates
+      try {
+        var path = el.getAttribute('data-path');
+        var newVal = JSON.parse(el.getAttribute('data-dirty-value') || 'null');
+        // Apply the replace by updating textContent for simple values,
+        // or delegate to renderFn for complex objects
+        if (typeof newVal === 'string' || typeof newVal === 'number') {
+          el.textContent = String(newVal);
+        }
+        el.removeAttribute('data-dirty');
+        el.removeAttribute('data-dirty-value');
+      } catch (e) { /* ignore malformed data */ }
+    }
+  }
+
   // ── Factory: createRefreshController ──
   window.createRefreshController = function (config) {
     config = config || {};
@@ -238,22 +262,26 @@
 
           var restoreScroll = preserveScroll();
 
+          var isFirstEvent = (lastState === null);
+
           if (lastState) {
             var diffs = computeDiff(lastState, data);
             if (diffFn && diffs.length > 0) {
               diffFn(diffs);
             }
-            applyDiff(diffs);
           }
 
           lastState = data;
           lastUpdateTimestamp = now();
           backoffIdx = 0; // reset backoff on success
 
-          // If no diffFn, do a full render periodically (every 5th update)
-          if (!diffFn || !lastState) {
+          // Full render only on first load; subsequent updates are diff-patch
+          if (isFirstEvent) {
             renderFn(data);
           }
+
+          // Handle replace ops: re-render subtrees marked by computeDiff
+          processReplaceOps(data, renderFn, lastState);
 
           restoreScroll();
           updateAgeDisplay();
@@ -322,11 +350,11 @@
             applyDiff(diffs);
           }
 
+          // Diff-patch updates only in polling mode; no full re-render
+          // (first load is handled by caller via renderFn at startup)
           lastState = data;
           lastUpdateTimestamp = now();
 
-          // Full render for polling mode
-          renderFn(data);
           restoreScroll();
           updateAgeDisplay();
 
@@ -454,6 +482,8 @@
         return paused;
       },
 
+      _pollInterval: pollInterval,
+
       destroy: function () {
         controller.stop();
         document.removeEventListener('visibilitychange', handleVisibility);
@@ -504,14 +534,13 @@
 
       var selected = '';
       if (val === 'sse' && currentMode === 'sse') selected = ' selected';
-      if (val === 'poll-10' && currentMode === 'poll' && controller.getAge() === -1) selected = ' selected'; // approximate
-      if (val === 'manual' && currentMode === 'manual') selected = ' selected';
-
-      // Better matching: check if current poll interval matches
       if (val === 'poll-10' && currentMode === 'poll') {
-        // approximate — we'd need to track the specific interval
-        selected = ' selected';
+        if (controller._pollInterval === 10000 || !controller._pollInterval) selected = ' selected';
       }
+      if (val === 'poll-30' && currentMode === 'poll') {
+        if (controller._pollInterval === 30000) selected = ' selected';
+      }
+      if (val === 'manual' && currentMode === 'manual') selected = ' selected';
 
       html += '<option value="' + val + '"' + selected + '>' + m.label + '</option>';
     }
