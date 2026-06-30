@@ -106,20 +106,26 @@ function DataTable(props) {
   var monospace = opts.monospace !== false;
   var compact = opts.compact || false;
   var maxHeight = opts.maxHeight || "";
+  var scrollable = opts.scrollable || false;
   var pad = compact ? "var(--space-1) var(--space-2)" : "var(--space-2) var(--space-3)";
   var font = "var(--font-size-sm) " + (monospace ? "var(--font-mono)" : "var(--font-display)");
-  var html = '<div' + (maxHeight ? ' style="max-height:' + maxHeight + ';overflow-y:auto;"' : '') + '>' +
-    '<table class="data-table" style="width:100%;border-collapse:collapse;font:' + font + ';">';
+  var html = '<div' + (maxHeight ? ' style="max-height:' + maxHeight + ';overflow-y:auto;"' : '') + '>';
+  if (scrollable) {
+    html = '<div class="table-scroll table-scroll-ios">';
+  }
+  html += '<table class="data-table" style="width:100%;border-collapse:collapse;font:' + font + ';">';
   html += '<thead><tr style="position:sticky;top:0;z-index:var(--z-sticky);">';
   for (var i = 0; i < headers.length; i++) {
-    html += '<th style="text-align:left;padding:' + pad + ';color:var(--dim);font:600 var(--font-size-xs) var(--font-mono);text-transform:uppercase;letter-spacing:var(--letter-spacing-wide);border-bottom:1px solid var(--border);background:var(--bg-base);">' + headers[i] + '</th>';
+    var stickyClass = (scrollable && i === 0) ? ' table-sticky-col' : '';
+    html += '<th class="' + stickyClass.trim() + '" style="text-align:left;padding:' + pad + ';color:var(--dim);font:600 var(--font-size-xs) var(--font-mono);text-transform:uppercase;letter-spacing:var(--letter-spacing-wide);border-bottom:1px solid var(--border);background:var(--bg-base);">' + headers[i] + '</th>';
   }
   html += '</tr></thead><tbody>';
   for (var r = 0; r < rows.length; r++) {
     html += '<tr style="border-bottom:1px solid var(--border-glass);transition:background var(--transition-fast);">';
     for (var c = 0; c < headers.length; c++) {
-      var val = rows[r][c] != null ? rows[r][c] : "\u2014";
-      html += '<td style="padding:' + pad + ';color:var(--text);">' + val + '</td>';
+      var val = rows[r][c] != null ? rows[r][c] : "\\u2014";
+      var tdStickyClass = (scrollable && c === 0) ? ' table-sticky-col' : '';
+      html += '<td class="' + tdStickyClass.trim() + '" style="padding:' + pad + ';color:var(--text);">' + val + '</td>';
     }
     html += '</tr>';
   }

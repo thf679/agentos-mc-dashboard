@@ -185,3 +185,44 @@
 /* Grid helpers for SDLC layout */
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+/* SDLC 600px breakpoint for single column */
+@media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+/* ── Table Scroll Container ── */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+.table-scroll table {
+  min-width: 600px;
+  white-space: nowrap;
+}
+
+/* ── Sticky First Column (mobile) ── */
+.table-sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--bg-base) !important;
+}
+.table-scroll thead th.table-sticky-col {
+  z-index: 2;
+  background: var(--bg-base) !important;
+}
+
+/* ── iOS smooth scrolling ── */
+.table-scroll-ios {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── SDLC responsive: single column at 600px ── */
+@media (max-width: 600px) {
+  .sdlc-grid { gap: var(--space-4); }
+}
+@media (min-width: 600px) {
+  .sdlc-responsive-stack { grid-template-columns: 1fr 1fr !important; }
+}
+@media (max-width: 599px) {
+  .sdlc-responsive-stack { grid-template-columns: 1fr !important; }
+}
