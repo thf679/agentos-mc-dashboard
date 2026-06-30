@@ -317,6 +317,8 @@ body::after {
     <div class="status-dot"></div>
     <span class="status-text" id="status-label">All systems operational</span>
     <span class="status-clock" id="clock">00:00:00</span>
+    <span id="data-age" style="font:400 var(--font-size-xs) var(--font-mono);color:var(--brand-mint);margin-left:var(--space-3);">Live ●</span>
+    <span id="refresh-selector-container"></span>
   </div>
 </nav>
 
@@ -344,6 +346,7 @@ body::after {
 </div>
 
 <script src="/components.js"></script>
+<script src="/refresh.js"></script>
 <script>
 // ── Render Badge ──
 document.getElementById("badge-version").innerHTML = Badge({ text: "v1.0", color: "var(--text-muted)", variant: "subtle" });
@@ -691,42 +694,50 @@ setInterval(updateClock, 1000);
     ctx.fill();
   }
 
-  function loadData() {
-    fetch("/api/snapshot")
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        currentData = d;
-        renderOverview(d);
-      })
-      .catch(function(e) {
-        if (!currentData) {
-          overviewEl.innerHTML = '<div style="color:var(--brand-red);text-align:center;padding:var(--space-6);">Snapshot unavailable</div>';
-        }
-      });
-  }
-
-  // Directive cycler
+  // ── Directive cycler ──
   setInterval(function() {
     directiveIdx++;
     if (currentData) renderOverview(currentData);
   }, 3000);
 
-  // Initial load + SSE
-  loadData();
-
-  var evt = new EventSource("/events");
-  evt.addEventListener("snapshot", function(e) {
-    try {
-      var d = JSON.parse(e.data);
+  // ── Smart refresh controller (SSE primary, poll fallback) ──
+  var refreshCtrl = createRefreshController({
+    mode: 'sse',
+    endpoint: '/api/snapshot',
+    dataAgeEl: document.getElementById('data-age'),
+    renderFn: function(d) {
       currentData = d;
       renderOverview(d);
-    } catch (err) {}
+    },
+    onError: function(err) {
+      console.warn('refresh: fetch error', err);
+    },
+    onStatusChange: function(status) {
+      var dot = document.querySelector('.status-dot');
+      if (status === 'sse-connected') {
+        if (dot) dot.style.background = 'var(--brand-mint)';
+      } else if (status === 'sse-error') {
+        if (dot) dot.style.background = 'var(--brand-amber)';
+      }
+    }
   });
-  evt.onerror = function() {
-    // SSE failed — poll every 8s
-    evt.close();
-    setInterval(loadData, 8000);
-  };
+
+  // Initial load via fetch
+  fetch("/api/snapshot")
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      currentData = d;
+      renderOverview(d);
+    })
+    .catch(function(e) {
+      if (!currentData) {
+        overviewEl.innerHTML = '<div style="color:var(--brand-red);text-align:center;padding:var(--space-6);">Snapshot unavailable</div>';
+      }
+    });
+  refreshCtrl.start();
+
+  // Wire refresh mode selector
+  createRefreshSelector(refreshCtrl, document.getElementById('refresh-selector-container'));
 })();
 
 // ════════════════════════════════════════════════════════
