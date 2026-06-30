@@ -123,7 +123,7 @@ function DataTable(props) {
   for (var r = 0; r < rows.length; r++) {
     html += '<tr style="border-bottom:1px solid var(--border-glass);transition:background var(--transition-fast);">';
     for (var c = 0; c < headers.length; c++) {
-      var val = rows[r][c] != null ? rows[r][c] : "\\u2014";
+      var val = rows[r][c] != null ? rows[r][c] : "—";
       var tdStickyClass = (scrollable && c === 0) ? ' table-sticky-col' : '';
       html += '<td class="' + tdStickyClass.trim() + '" style="padding:' + pad + ';color:var(--text);">' + val + '</td>';
     }
